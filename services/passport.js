@@ -23,19 +23,16 @@ passport.use(
       callbackURL: '/auth/google/callback',
       proxy: true
     },
-    (accessToken, refreshToken, profile, done) => {
+    async (accessToken, refreshToken, profile, done) => {
       // The then statement is a promise that will run once the mongodb has ran
-      User.findOne({ googleId: profile.id }).then(existingUser => {
-        if (existingUser) {
-          // Already have a record with this userSchema
-          done(null, existingUser);
-        } else {
-          // Only creates new user if not previously added
-          new User({ googleId: profile.id })
-            .save()
-            .then(user => done(null, user));
-        }
-      });
+      const existingUser = await User.findOne({ googleId: profile.id });
+      if (existingUser) {
+        // Already have a record with this userSchema
+        return done(null, existingUser);
+      }
+      // Only creates new user if not previously added
+      const user = await new User({ googleId: profile.id }).save();
+      done(null, user);
     }
   )
 );
